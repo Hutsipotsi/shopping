@@ -9,11 +9,22 @@ function App() {
   const [taskD, setTaskD] = useState('');
   const [taskA, setTaskA] = useState('');
   const [editTaskD, setEditTaskD] = useState(null);
+  const [editTaskA, setEditTaskA] = useState(null);
   const [editDescription, setEditDescription] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+
+  useEffect(() => {
+    axios.get(URL)
+    .then((response) => {
+      setTasks(response.data)
+    }).catch(error => {
+      alert(error.response ? error.response.data.error : error);
+    })
+  }, [])
 
   function save(e) {
     e.preventDefault();
-    const json = JSON.stringify({description:taskD})
+    const json = JSON.stringify({description:taskD,amount:taskA})
     axios.post(URL + 'add.php',json,{
       headers: {
         'Content-Type' : 'application/json'
@@ -43,44 +54,40 @@ function App() {
     });
   }
   
-  function setEditedTaskD(taskD) {
+  function setEditedTasks(taskD,taskA) {
     setEditTaskD(taskD);
+    setEditTaskA(taskA);
     setEditDescription(taskD?.description);
+    setEditAmount(taskA?.amount);
   }
+
   
   function update(e) {
     e.preventDefault();
-    const json = JSON.stringify({id:editTaskD.id,description:editDescription})
+    const json = JSON.stringify({id:editTaskD.id,description:editDescription,amount:editAmount})
     axios.post(URL + 'update.php',json,{
       headers: {
         'Content-Type' : 'application/json'
       }
     })
     .then((response) => {
-      tasks[(tasks.findIndex(taskD => taskD.id === editTaskD.id))].description =   editDescription;
+      tasks[(tasks.findIndex(taskD => taskD.id === editTaskD.id))].description = editDescription;
       setTasks([...tasks]);
-      setEditedTaskD(null);
+      setEditedTasks(null);
+     // setEditedTaskA(null)
     }).catch (error => {
       alert(error.response ? error.response.data.error : error);
     });
   }
 
-useEffect(() => {
-  axios.get(URL)
-  .then((response) => {
-    setTasks(response.data)
-  }).catch(error => {
-    alert(error.response ? error.response.data.error : error);
-  })
-}, [])
 
   return (
     <div className="container">
       <h3>Shopping list</h3>
       <form onSubmit={save}>
         <label>New item</label>&nbsp;
-        <input value={taskD} onChange={e => setTaskD(e.target.value)} />&nbsp;
-        <input value={taskA} onChange={e => setTaskA(e.target.value)} />&nbsp;
+        <input placeholder="type description" value={taskD} onChange={e => setTaskD(e.target.value)} />&nbsp;
+        <input placeholder="type amount" value={taskA} onChange={e => setTaskA(e.target.value)} />&nbsp;
         <button>Add</button>
       </form>
       <ol>
@@ -88,19 +95,20 @@ useEffect(() => {
           <li key={taskD.id}>
             {editTaskD?.id !== taskD.id && 
             taskD.description
-            }
+            }&nbsp;{taskD.amount} 
             {editTaskD?.id === taskD.id &&
             <form onSubmit={update}>
               <input value={editDescription} onChange={e => setEditDescription(e.target. value)}/>&nbsp;
+              <input value={editAmount} onChange={e => setEditAmount(e.target.value)}/>&nbsp;
               <button>Save</button>&nbsp;
-              <button type="button" onClick={() => setEditedTaskD(null)}> Cancel</button>
+              <button type="button" onClick={() => setEditedTasks(null)}> Cancel</button>
               </form>
             }
           &nbsp;<a className="delete" onClick={() => remove(taskD.id)} href="#">
             Delete
             </a>&nbsp;
             {editTaskD === null &&
-            <a className="edit" onClick={() => setEditedTaskD(taskD)} href="#">
+            <a className="edit" onClick={() => setEditedTasks(taskD,taskA)} href="#">
               Edit
             </a>
             }
