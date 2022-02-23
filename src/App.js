@@ -8,8 +8,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [taskD, setTaskD] = useState('');
   const [taskA, setTaskA] = useState('');
-  const [editTaskD, setEditTaskD] = useState(null);
-  const [editTaskA, setEditTaskA] = useState(null);
+  const [editTasks, setEditTasks] = useState(null);
   const [editDescription, setEditDescription] = useState('');
   const [editAmount, setEditAmount] = useState('');
 
@@ -54,27 +53,26 @@ function App() {
     });
   }
   
-  function setEditedTasks(taskD,taskA) {
-    setEditTaskD(taskD);
-    setEditTaskA(taskA);
-    setEditDescription(taskD?.description);
-    setEditAmount(taskA?.amount);
+  function setEditedTasks(tasks) {
+    setEditTasks(tasks);
+    setEditDescription(tasks?.description);
+    setEditAmount(tasks?.amount);
   }
 
   
   function update(e) {
     e.preventDefault();
-    const json = JSON.stringify({id:editTaskD.id,description:editDescription,amount:editAmount})
+    const json = JSON.stringify({id:editTasks.id,description:editDescription,amount:editAmount})
     axios.post(URL + 'update.php',json,{
       headers: {
         'Content-Type' : 'application/json'
       }
     })
     .then((response) => {
-      tasks[(tasks.findIndex(taskD => taskD.id === editTaskD.id))].description = editDescription;
+      tasks[(tasks.findIndex(taskD => taskD.id === editTasks.id))].description = editDescription;
+      tasks[(tasks.findIndex(taskD => taskD.id === editTasks.id))].amount = editAmount;
       setTasks([...tasks]);
       setEditedTasks(null);
-     // setEditedTaskA(null)
     }).catch (error => {
       alert(error.response ? error.response.data.error : error);
     });
@@ -93,10 +91,11 @@ function App() {
       <ol>
         {tasks?.map(taskD => (
           <li key={taskD.id}>
-            {editTaskD?.id !== taskD.id && 
+            {editTasks?.id !== taskD.id && 
             taskD.description
-            }&nbsp;{taskD.amount} 
-            {editTaskD?.id === taskD.id &&
+            }&nbsp;{editTasks?.id !== taskD.id && 
+              taskD.amount} 
+            {editTasks?.id === taskD.id &&
             <form onSubmit={update}>
               <input value={editDescription} onChange={e => setEditDescription(e.target. value)}/>&nbsp;
               <input value={editAmount} onChange={e => setEditAmount(e.target.value)}/>&nbsp;
@@ -107,8 +106,8 @@ function App() {
           &nbsp;<a className="delete" onClick={() => remove(taskD.id)} href="#">
             Delete
             </a>&nbsp;
-            {editTaskD === null &&
-            <a className="edit" onClick={() => setEditedTasks(taskD,taskA)} href="#">
+            {editTasks === null &&
+            <a className="edit" onClick={() => setEditedTasks(taskD)} href="#">
               Edit
             </a>
             }
